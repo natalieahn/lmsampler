@@ -13,7 +13,7 @@ required and optional control variables, fixed effects factors, clustering facto
 and variable suffixes (which can be used to select different sets of X variables, such as to randomly sample the lag period for time
 series data, if the X variables have already been lagged and given different suffixes for each lag in the dataframe).
 
-![alt text](https://github.com/natalieahn/lmsamplr/blob/master/lmsamplr_example_plot.png)
+![alt text](https://github.com/natalieahn/lmsamplr/blob/master/example_plot.png)
 
 ### Public methods:
 
