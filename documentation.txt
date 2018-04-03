@@ -1,0 +1,75 @@
+LMSampler: Documentation
+-------------------------
+Tools to sample permutations of model parameters for OLS regression, 
+plot distribution of results, analyze parameter consequences.
+
+Natalie Ahn
+April 2018
+--------------------------------------------------------------------------------------------
+
+Public methods
+--------------------------------------------------------------------------------------------
+fit_permute(data, y_var, X_vars, controls_use=[], controls_optional=[],
+            fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
+            X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1,
+            ols_fit_kwargs={})
+--------------------------------------------------------------------------------------------
+     Takes a pandas dataframe, the name of a y_var, list of names of X_vars, optional lists
+     of names of parameters to permute, and number of iterations, and returns a results dict
+     object. If a factor (variable name) is provided for clusters_use, clusters_optional
+     will be ignored; otherwise a single factor will be chosen from clusters_optional for
+     clustering standard errors. If neither is provided, ols_fit_kwargs will be passed to
+     statsmodels.OLS.fit, so that users can specify other types of robust standard errors.
+     The argument n_iter refers to the number of regression models that will be sampled.
+     Time complexity is linear in n_iter.
+
+--------------------------------------------------------------------------------------------
+summarize(results, X_vars=None, out=sys.stdout)
+--------------------------------------------------------------------------------------------
+     Takes a results dict object (from fit_permute) an optional list of X_var names (by
+     default, all that appear in results will be used), and an optional output file object
+     (by default, stdio will be used), and prints summary results. The summary includes
+     mean coefficients, mean standard errors, and mean p-values for each X_var, averaged
+     across the sampled models recorded in the results object.
+
+--------------------------------------------------------------------------------------------
+plot(results, filepath, X_vars=None, X_labs=None, title=None,
+     nbins=50, figsize=None, colors=None, dpi=None, ci_legend=False)
+--------------------------------------------------------------------------------------------
+     Takes a results dict object (from fit_permute), a filepath to the desired output image
+     file, and other optional arguments, and plots a set of figures showing the distribution
+     of regression estimates across sampled models. The figures include plots of mean
+     coefficients with confidence interval bars and histograms of the distribution of
+     coefficients and p-values across sampled models recorded in the results object. An
+     example is shown in the README in this repository.
+
+--------------------------------------------------------------------------------------------
+analyze_params(results, X_vars=None, out=sys.stdout, threshold=.05, max_interact=1)    
+--------------------------------------------------------------------------------------------
+     Takes a results dict object (from fit_permute), an optional list of X_var names (by
+     default, all that appear in results will be used), and an optional output file object
+     (by default, stdio will be used), and prints summary statistics for certain parameters
+     that produce sizable differences in the regression estimates when those parameters are
+     chosen vs. when they are not. The printed results show how the estimated coefficient on
+     the given X variable differs between models with the given parameter chosen versus
+     models without it. If the average coefficient change is positive, the coefficients
+     on the X variable are greater when the parameter is selected than when it is not.
+     
+     The overlap score shows what percentage of the distribution of model coefficients
+     overlap across models with the given parameter vs models without it. The threshold
+     argument is not a measure of statistical significance, but a threshold for overlap.
+     In other words, the threshold represents the minimum overlap in the distributions of
+     coefficients between two sets of models (with and without the given parameter or
+     combination of parameters), to report that parameter selection in the analysis.
+
+     Parameters are named by the type and specific value, e.g.:
+          "control_var(income)" indicates that income is included as a control variable,
+          "fixed_effects(city)" indicates that city fixed effects have been included,
+          "clustered_se(state)" indicates that standard errors have been clustered by state.
+
+     The argument max_interact refers to the highest order of dependencies (or number of
+     interacting parameters) that the method searches for, to find combinations that produce
+     sizably different model estimates. Time complexity is exponential in max_interact (i.e.
+     O(n^k) where n = number of parameters and k = max_interact), although some intuitive
+     stopping criteria are included to try to keep the run time manageable for small numbers
+     of parameters (e.g. dozens) and interactions (e.g. 2 or 3).
