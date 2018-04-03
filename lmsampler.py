@@ -1,4 +1,4 @@
-# LMSamplr
+# LMSampler
 #
 # Code to sample permutations of model parameters for OLS regression, 
 # plot distribution of results, analyze parameter consequences.
@@ -8,29 +8,29 @@
 #
 # Public methods:
 #
-#	fit_permute(data, y_var, X_vars, ...):	Takes a pandas dataframe, the name of a y_var,
-#											list of names of X_vars, optional lists of
-#											names of parameters to permute, and number of
-#											iterations, and returns a results dict object.
+#	fit_permute(data, y_var, X_vars, ...):  Takes a pandas dataframe, the name of a y_var,
+#                                               list of names of X_vars, optional lists of
+#                                               names of parameters to permute, and number of
+#                                               iterations, and returns a results dict object.
 #
-#	summarize(results, ...):				Takes a results dict object (from fit_permute)
-#											an optional list of X_var names (by default,
-#											all that appear in results will be used), and
-#											an optional output file object (by default,
-#											stdio will be used), and prints summary results.
+#	summarize(results, ...):                Takes a results dict object (from fit_permute)
+#                                               an optional list of X_var names (by default,
+#                                               all that appear in results will be used), and
+#                                               an optional output file object (by default,
+#                                               stdio will be used), and prints summary results.
 #
-#	plot(results, filepath, ...):			Takes a results dict object (from fit_permute),
-#											a filepath to the desired output image file,
-#											and other optional arguments, and plots a set of
-#											figures showing the distribution of regression
-#											estimates across sampled models.
+#	plot(results, filepath, ...):           Takes a results dict object (from fit_permute),
+#                                               a filepath to the desired output image file,
+#                                               and other optional arguments, and plots a set of
+#                                               figures showing the distribution of regression
+#                                               estimates across sampled models.
 #
-#	analyze_params(results, ...):			Takes a results dict object (from fit_permute),
-#											and optional other arguments including an output
-#											file object, and prints summary statistics for
-#											certain parameters that produce sizable differences
-#											in the regression estimates when those parameters
-#											are chosen vs. when they are not.
+#	analyze_params(results, ...):           Takes a results dict object (from fit_permute),
+#                                               and optional other arguments including an output
+#                                               file object, and prints summary statistics for
+#                                               certain parameters that produce sizable differences
+#                                               in the regression estimates when those parameters
+#                                               are chosen vs. when they are not.
 
 import re, csv, sys
 import pandas as pd
@@ -49,14 +49,14 @@ class LMSampler:
 		self.e = .1**10
 
 	def fit_permute(self, data, y_var, X_vars, controls_use=[], controls_optional=[],
-					fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
-					X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1, ols_fit_kwargs={}):
+			fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
+			X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1, ols_fit_kwargs={}):
 		if max_controls is None: max_controls = len(controls_optional)
 		param_names = ['X_suffix(%s)' % suffix for suffix in X_suffixes] \
-					+ ['control_var(%s)' % var for var in controls_optional] \
-					+ ['control_suffix(%s)' % suffix for suffix in control_suffixes] \
-					+ ['fixed_factor(%s)' % factor for factor in fixed_optional] \
-					+ ['cluster_factor(%s)' % factor for factor in clusters_optional]
+				+ ['control_var(%s)' % var for var in controls_optional] \
+				+ ['control_suffix(%s)' % suffix for suffix in control_suffixes] \
+				+ ['fixed_effects(%s)' % factor for factor in fixed_optional] \
+				+ ['clustered_se(%s)' % factor for factor in clusters_optional]
 		results = {'y_var':y_var, 'X_vars':X_vars,
 				   'param_names':param_names, 'params':[],
 				   'rsquared_adj':[], 'fvalue':[], 'coefs':[], 'bses':[], 'pvals':[]}
@@ -86,8 +86,8 @@ class LMSampler:
 		return results
 
 	def _permute_params(self, data, y_var, X_vars, controls_use, controls_optional,
-						fixed_use, fixed_optional, cluster_use, clusters_optional,
-						X_suffixes, control_suffixes, max_controls):
+				fixed_use, fixed_optional, cluster_use, clusters_optional,
+				X_suffixes, control_suffixes, max_controls):
 		params = []
 		if X_suffixes:
 			X_suffix = np.random.choice(X_suffixes)
@@ -133,9 +133,9 @@ class LMSampler:
 		X_stats = {}
 		for i,X_var in enumerate(X_vars):
 			print_text = '%40s %10s %10s %10s' % (X_var, \
-						  '%.4g' % np.nanmean(results['coefs'][:,i]),
-						  '%.4g' % np.nanmean(results['bses'][:,i]),
-						  '%.4g' % np.nanmean(results['pvals'][:,i]))
+					'%.4g' % np.nanmean(results['coefs'][:,i]),
+					'%.4g' % np.nanmean(results['bses'][:,i]),
+					'%.4g' % np.nanmean(results['pvals'][:,i]))
 			for signif in [0.05, 0.01, 0.001]:
 				if signif >= np.nanmean(results['pvals'][:,i]):
 					print_text += '*'
@@ -249,7 +249,7 @@ class LMSampler:
 			nums = nums[::2]
 		return nums
 
-	def analyze_params(self, results, X_vars=None, out=sys.stdout, threshold=.05, max_order=1):
+	def analyze_params(self, results, X_vars=None, out=sys.stdout, threshold=.05, max_interact=1):
 		if not X_vars: X_vars = list(results['X_vars'])
 		_ = out.write('***** ANALYSIS OF PARAMETERS *****\n')
 		_ = out.write('Summary of %d models per X var; y var: %s\n' \
@@ -259,9 +259,9 @@ class LMSampler:
 		for i,X_var in enumerate(X_vars):
 			_ = out.write('\X var: %s\n' % X_var)
 			row_filter = [True for _ in range(len(results['params']))]
-			self._analyze_params_recurs(results, i, [], row_filter, max_order, '', out, threshold)
+			self._analyze_params_recurs(results, i, [], row_filter, max_interact, '', out, threshold)
 
-	def _analyze_params_recurs(self, results, X_ind, params_in, prev_filter, max_order, prev_text, out, threshold):
+	def _analyze_params_recurs(self, results, X_ind, params_in, prev_filter, max_interact, prev_text, out, threshold):
 		for j in range(len(results['param_names'])):
 			print_text = prev_text
 			if j not in params_in:
@@ -278,10 +278,10 @@ class LMSampler:
 					if overlap <= threshold:
 						print_text += '%15s %15s\n' % ('%.4g'%dif, '%.4g'%overlap)
 						_ = out.write(print_text)
-					elif len(params_in) < max_order - 1 \
+					elif len(params_in) < max_interact - 1 \
 					and concent > 1:
 						self._analyze_params_recurs(results, X_ind, params_in+[j], row_filter,
-													max_order, print_text, out, threshold)
+										max_interact, print_text, out, threshold)
 
 	def _compare_distros(self, results, X_ind, row_filter):
 		rows_in = np.where(row_filter)[0]
