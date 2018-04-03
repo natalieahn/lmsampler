@@ -50,7 +50,8 @@ class LMSampler:
 
 	def fit_permute(self, data, y_var, X_vars, controls_use=[], controls_optional=[],
 			fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
-			X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1, ols_fit_kwargs={}):
+			X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1,
+			boostrap=False, ols_fit_kwargs={}):
 		if max_controls is None: max_controls = len(controls_optional)
 		param_names = ['X_suffix(%s)' % suffix for suffix in X_suffixes] \
 				+ ['control_var(%s)' % var for var in controls_optional] \
@@ -68,6 +69,10 @@ class LMSampler:
 			if data_model.shape[0] > 0:
 				if clust: y,X,c = data_model.iloc[:,0], data_model.iloc[:,1:-1], data_model.iloc[:,-1]
 				else: y,X = data_model.iloc[:,0], data_model.iloc[:,1:]
+				if bootstrap:
+					data_order = np.random.choice(range(len(y)), len(y), replace=True)
+					if clust: y,X,c = y.iloc[data_order], X.iloc[data_order,:], c.iloc[data_order]
+					else: y,X = y.iloc[data_order], X.iloc[data_order,:]
 				corr = np.corrcoef(X, rowvar=False)
 				if not np.isnan(corr[0][0]):
 					X = np.concatenate([np.ones([X.shape[0],1]), X], axis=1)
@@ -257,12 +262,14 @@ class LMSampler:
 		_ = out.write('%40s %15s %15s\n' % ('Parameter', 'Avg Coef Chng', 'Distro Overlap'))
 		nparams = len(results['param_names'])
 		for i,X_var in enumerate(X_vars):
-			_ = out.write('\X var: %s\n' % X_var)
+			_ = out.write('X var: %s\n' % X_var)
 			row_filter = [True for _ in range(len(results['params']))]
 			self._analyze_params_recurs(results, i, [], row_filter, max_interact, '', out, threshold)
 
 	def _analyze_params_recurs(self, results, X_ind, params_in, prev_filter, max_interact, prev_text, out, threshold):
-		for j in range(len(results['param_names'])):
+		if len(params_in) > 0: start = params_in[0] + 1
+		else: start = 0
+		for j in range(start, len(results['param_names'])):
 			print_text = prev_text
 			if j not in params_in:
 				row_filter = prev_filter & (results['params'][:,j] == 1.)
