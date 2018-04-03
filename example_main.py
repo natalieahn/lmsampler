@@ -28,4 +28,24 @@ with open('test_results_summary.txt', 'w') as f:
 sampler.plot(results, 'test_results_figure.png')
 
 with open('test_results_byparams.txt', 'w') as f:
-  sampler.analyze_params(results, f, threshold=.1, max_order=2)
+  sampler.analyze_params(results, f, threshold=.1, max_interact=2)
+
+# Notes: The .analyze_params method compares the distribution of regression estimates in models
+# with the given parameter, to models without that parameter. Parameters are named by the type
+# and specific value, e.g.:
+#      "control_var(income)" indicates that income is included as a control variable,
+#      "fixed_effects(city)" indicates that city fixed effects have been included,
+#      "clustered_se(state)" indicates that standard errors have been clustered by state.
+
+# The printed results show how the estimated coefficient on the given X variable differs between
+# models with the given parameter chosen versus models without it. If the average coefficient
+# change shown is positive, the coefficients on the X variable are greater when the parameter
+# is selected than when it is not. The overlap score shows what percentage of the distribution
+# of model coefficients overlap across models with the given parameter vs models without it.
+
+# The argument max_interact refers to the highest order of dependencies (or number of interacting
+# parameters) that the method searches for, to find combinations that produce sizably different
+# model estimates. Time complexity is exponential in max_interact (i.e. O(n^k) where n = number of
+# parameters and k = max_interact), although some intuitive stopping criteria are included to try to
+# keep the run time manageable for small numbers of parameters (e.g. dozens) and interactions
+# (e.g. 2 or 3).
