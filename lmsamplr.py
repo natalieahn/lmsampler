@@ -171,13 +171,13 @@ class LMSamplr:
 		_ = plt.title('Mean coefs\nw/ mean CIs', size='large')
 		coefs = results['coefs'][:,X_inds]
 		ses = results['bses'][:,X_inds]
-		mean_coefs = np.array([np.mean(vals) for vals in coefs])
+		mean_coefs = np.array([mean(coefs[:,i]) for i in range(len(X_inds))])
 		_ = plt.plot([0,0], [0,axes[-1]], color='k', linewidth=.5)
 		for i in range(len(X_inds)):
 			_ = plt.plot(mean_coefs[i], ys[i], color=colors[i], marker='.', linestyle='')
 			colors[i][-1] = 0.25
 			for c,z in [('99%',2.576), ('95%',1.96), ('90%',1.645)]:
-				ci = np.mean(ses[i]) * z
+				ci = np.mean(ses[:,i]) * z
 				if mean_coefs[i] - ci < axes[0]: axes[0] = mean_coefs[i] - ci
 				if mean_coefs[i] + ci > axes[1]: axes[1] = mean_coefs[i] + ci
 				_ = plt.errorbar(mean_coefs[i], ys[i], xerr=ci, color=colors[i], linestyle='', linewidth=3)
