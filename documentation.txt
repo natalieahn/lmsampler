@@ -12,7 +12,7 @@ Public methods
 fit_permute(data, y_var, X_vars, controls_use=[], controls_optional=[],
             fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
             X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1,
-            ols_fit_kwargs={})
+            boostrap=False, ols_fit_kwargs={})
 --------------------------------------------------------------------------------------------
      Takes a pandas dataframe, the name of a y_var, list of names of X_vars, optional lists
      of names of parameters to permute, and number of iterations, and returns a results dict
@@ -21,7 +21,8 @@ fit_permute(data, y_var, X_vars, controls_use=[], controls_optional=[],
      clustering standard errors. If neither is provided, ols_fit_kwargs will be passed to
      statsmodels.OLS.fit, so that users can specify other types of robust standard errors.
      The argument n_iter refers to the number of regression models that will be sampled.
-     Time complexity is linear in n_iter.
+     If boostrap == True, it will also resample observations with replacement (same sample
+     size). Time complexity is linear in n_iter.
 
 --------------------------------------------------------------------------------------------
 summarize(results, X_vars=None, out=sys.stdout)
