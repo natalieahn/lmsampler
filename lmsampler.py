@@ -43,7 +43,7 @@ from collections import Hashable, Iterable
 from statistics import mean
 
 
-class LMSamplr:
+class LMSampler:
 
 	def __init__(self):
 		self.e = .1**10
