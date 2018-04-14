@@ -121,7 +121,7 @@ class LMSampler:
 				cluster_include = None
 			params += [1. if factor == cluster_include else 0. for factor in clusters_optional]
 		else: cluster_include = None
-		data_model = data[[y_var] + X_vars_suffixed + control_include]
+		data_model = data.loc[:,[y_var] + X_vars_suffixed + control_include]
 		for factor in fixed_include:
 			data_fixed = pd.get_dummies(data[factor].astype('category'), prefix=factor)
 			data_model = pd.concat([data_model, data_fixed.iloc[:,:-1]], axis=1)
