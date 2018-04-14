@@ -51,7 +51,7 @@ class LMSampler:
 	def fit_permute(self, data, y_var, X_vars, controls_use=[], controls_optional=[],
 			fixed_use=[], fixed_optional=[], cluster_use=None, clusters_optional=[],
 			X_suffixes=[], control_suffixes=[], max_controls=None, n_iter=1,
-			boostrap=False, ols_fit_kwargs={}):
+			bootstrap=False, ols_fit_kwargs={}):
 		if max_controls is None: max_controls = len(controls_optional)
 		param_names = ['X_suffix(%s)' % suffix for suffix in X_suffixes] \
 				+ ['control_var(%s)' % var for var in controls_optional] \
@@ -136,17 +136,18 @@ class LMSampler:
 					  % (len(results['params']), results['y_var']))
 		_ = out.write('%40s %10s %10s %10s\n' % ('X var', 'Avg Coef', 'Avg SE', 'Avg Pval'))
 		X_stats = {}
-		for i,X_var in enumerate(X_vars):
-			print_text = '%40s %10s %10s %10s' % (X_var, \
-					'%.4g' % np.nanmean(results['coefs'][:,i]),
-					'%.4g' % np.nanmean(results['bses'][:,i]),
-					'%.4g' % np.nanmean(results['pvals'][:,i]))
-			for signif in [0.05, 0.01, 0.001]:
-				if signif >= np.nanmean(results['pvals'][:,i]):
-					print_text += '*'
-				else: break
-			print_text += '\n'
-			_ = out.write(print_text)
+		if len(results['coefs']) > 0:
+			for i,X_var in enumerate(X_vars):
+				print_text = '%40s %10s %10s %10s' % (X_var, \
+						'%.4g' % np.nanmean(results['coefs'][:,i]),
+						'%.4g' % np.nanmean(results['bses'][:,i]),
+						'%.4g' % np.nanmean(results['pvals'][:,i]))
+				for signif in [0.05, 0.01, 0.001]:
+					if signif >= np.nanmean(results['pvals'][:,i]):
+						print_text += '*'
+					else: break
+				print_text += '\n'
+				_ = out.write(print_text)
 		_ = out.write('\n')
 
 	def plot(self, results, filepath, X_vars=None, X_labs=None, title=None,
